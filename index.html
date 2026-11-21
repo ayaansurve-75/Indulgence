@@ -1,0 +1,358 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INDULGENCE | Fine Dining</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ================= NAVBAR ================= -->
+    <header class="navbar" id="navbar">
+
+        <a href="#" class="logo">INDULGENCE<span>.</span></a>
+
+        <nav class="nav-links">
+            <a href="#home">Home</a>
+            <a href="#deals">Deals</a>
+            <a href="#menu">Menu</a>
+        </nav>
+
+        <button class="cart-button" id="cart-button">
+            Cart <span id="cart-count">0</span>
+        </button>
+
+    </header>
+
+
+    <!-- ================= HERO SECTION ================= -->
+    <section class="hero" id="home">
+
+        <div class="hero-content">
+
+            <p class="hero-subtitle">A CULINARY EXPERIENCE</p>
+
+            <h1>Where every bite<br>is an <span>indulgence.</span></h1>
+
+            <p class="hero-description">
+                Discover flavors crafted with passion, served with elegance,
+                and made for moments worth savoring.
+            </p>
+
+            <a href="#menu" class="hero-button">Explore Our Menu</a>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= DEALS SECTION ================= -->
+    <section class="deals-section" id="deals">
+
+        <div class="section-heading">
+
+            <p class="section-subtitle">EXCLUSIVE OFFERS</p>
+
+            <h2>Something Special<br>for Every Occasion</h2>
+
+            <p class="section-description">
+                Indulge in more. Spend less. Discover our curated offers.
+            </p>
+
+        </div>
+
+        <div class="deals-container" id="deals-container">
+
+            <!-- Deal cards will be generated using JavaScript -->
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= MENU SECTION ================= -->
+    <section class="menu-section" id="menu">
+
+        <div class="section-heading">
+
+            <p class="section-subtitle">MADE WITH PASSION</p>
+
+            <h2>Explore Our Menu</h2>
+
+            <p class="section-description">
+                From comforting classics to unforgettable creations.
+            </p>
+
+        </div>
+
+
+        <!-- Menu category navigation -->
+        <div class="menu-categories" id="menu-categories">
+
+            <!-- Category buttons will be generated using JavaScript -->
+
+        </div>
+
+
+        <!-- Veg / Non-Veg filters -->
+        <div class="diet-filters" id="diet-filters">
+
+            <button class="filter-button active" data-filter="all">All</button>
+            <button class="filter-button" data-filter="veg">Veg</button>
+            <button class="filter-button" data-filter="non-veg">Non-Veg</button>
+
+        </div>
+
+
+        <!-- Menu items -->
+        <div class="menu-container" id="menu-container">
+
+            <!-- Food cards will be generated using JavaScript -->
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= CART PANEL ================= -->
+    <div class="cart-overlay" id="cart-overlay"></div>
+
+    <aside class="cart-panel" id="cart-panel">
+
+        <div class="cart-header">
+
+            <h2>Your Cart</h2>
+
+            <button class="close-cart" id="close-cart" aria-label="Close cart">
+                &times;
+            </button>
+
+        </div>
+
+
+        <div class="cart-items" id="cart-items">
+
+            <!-- Cart items will be generated using JavaScript -->
+
+        </div>
+
+
+        <div class="cart-summary" id="cart-summary">
+
+            <div class="summary-row">
+                <span>Subtotal</span>
+                <span id="cart-subtotal">₹0</span>
+            </div>
+
+            <div class="summary-row discount-row">
+                <span>Discount</span>
+                <span id="cart-discount">−₹0</span>
+            </div>
+
+            <div class="summary-row total-row">
+                <span>Total</span>
+                <span id="cart-total">₹0</span>
+            </div>
+
+            <button class="checkout-button" id="checkout-button">
+                Proceed to Checkout
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ================= BUDGET TRACKER ================= -->
+    <div class="budget-tracker" id="budget-tracker">
+
+        <div class="budget-info">
+
+            <span class="budget-label">YOUR SPENDING</span>
+
+            <div class="budget-amounts">
+                <span id="budget-spent">₹0</span>
+                <span class="budget-separator">/</span>
+                <span id="budget-limit">No budget</span>
+            </div>
+
+        </div>
+
+
+        <div class="budget-progress-container">
+
+            <div class="budget-progress-bar" id="budget-progress-bar"></div>
+
+        </div>
+
+
+        <button class="budget-toggle" id="budget-toggle">
+            Set Budget
+        </button>
+
+    </div>
+
+
+    <!-- ================= BUDGET MODAL ================= -->
+    <div class="budget-modal-overlay" id="budget-modal-overlay">
+
+        <div class="budget-modal" id="budget-modal">
+
+            <button class="budget-modal-close" id="budget-modal-close">
+                &times;
+            </button>
+
+            <h2>Set Your Budget</h2>
+
+            <p>How much would you like to spend today?</p>
+
+            <form id="budget-form">
+
+                <label for="budget-input">Budget Amount (₹)</label>
+
+                <input
+                    type="number"
+                    id="budget-input"
+                    min="1"
+                    placeholder="Enter your budget"
+                    required
+                >
+
+                <button type="submit">Set Budget</button>
+
+            </form>
+
+            <button class="remove-budget-button" id="remove-budget">
+                Remove Budget
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ================= CHECKOUT SECTION ================= -->
+    <section class="checkout-section" id="checkout">
+
+        <div class="section-heading">
+
+            <p class="section-subtitle">ALMOST THERE</p>
+
+            <h2>Review Your Order</h2>
+
+            <p class="section-description">
+                Take a moment to review your selection before confirming.
+            </p>
+
+        </div>
+
+
+        <!-- Final order display -->
+        <div class="final-order-container" id="final-order-container">
+
+            <!-- Final order will be generated using JavaScript -->
+
+        </div>
+
+
+        <!-- Customer details -->
+        <div class="customer-details">
+
+            <h3>Your Details</h3>
+
+            <form id="order-form">
+
+                <div class="form-group">
+
+                    <label for="customer-name">Your Name</label>
+
+                    <input
+                        type="text"
+                        id="customer-name"
+                        placeholder="Enter your name"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="table-number">Table Number</label>
+
+                    <select id="table-number" required>
+
+                        <option value="">Select your table</option>
+                        <option value="1">Table 1</option>
+                        <option value="2">Table 2</option>
+                        <option value="3">Table 3</option>
+                        <option value="4">Table 4</option>
+                        <option value="5">Table 5</option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="table-code">Table Code (To make sure order isn't placed for the wrong table) </label>
+
+                    <input
+                        type="password"
+                        id="table-code"
+                        placeholder="Enter your table code"
+                        required
+                    >
+
+                </div>
+
+
+                <button type="submit" class="confirm-order-button">
+                    Confirm Order
+                </button>
+
+            </form>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================= ORDER SUCCESS ================= -->
+    <section class="order-success" id="order-success">
+
+        <!-- Success receipt will be generated using JavaScript -->
+
+    </section>
+
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="footer">
+
+        <a href="#home" class="logo">INDULGENCE<span>.</span></a>
+
+        <p>Crafted for your cravings. Created for your moments.</p>
+
+        <p class="footer-copyright">
+            &copy; 2026 INDULGENCE. All rights reserved.
+        </p>
+
+    </footer>
+
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+
+</body>
+</html>
