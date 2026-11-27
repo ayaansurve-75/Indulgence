@@ -9,13 +9,14 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500;1,600&display=swap" rel="stylesheet">
 
     <!-- CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
+    <canvas id="stardust-canvas" aria-hidden="true"></canvas>
 
     <!-- ================= NAVBAR ================= -->
     <header class="navbar" id="navbar">
@@ -26,6 +27,7 @@
             <a href="#home">Home</a>
             <a href="#deals">Deals</a>
             <a href="#menu">Menu</a>
+            <a href="#checkout">Checkout</a>
         </nav>
 
         <button class="cart-button" id="cart-button">
@@ -37,6 +39,22 @@
 
     <!-- ================= HERO SECTION ================= -->
     <section class="hero" id="home">
+
+        <div class="hero-media" aria-hidden="true">
+            <video class="hero-video is-active" muted playsinline preload="auto" poster="https://images.pexels.com/videos/8964471/free-video-8964471.jpg?auto=compress&cs=tinysrgb&w=1600">
+                <source src="https://videos.pexels.com/video-files/8964471/8964471-hd_1920_1080_25fps.mp4" type="video/mp4">
+            </video>
+            <video class="hero-video" muted playsinline preload="metadata" poster="https://images.pexels.com/videos/5049235/free-video-5049235.jpg?auto=compress&cs=tinysrgb&w=1600">
+                <source src="https://videos.pexels.com/video-files/5049235/5049235-hd_1280_720_30fps.mp4" type="video/mp4">
+            </video>
+            <video class="hero-video" muted playsinline preload="metadata" poster="https://images.pexels.com/videos/7008582/free-video-7008582.jpg?auto=compress&cs=tinysrgb&w=1600">
+                <source src="https://videos.pexels.com/video-files/7008582/7008582-hd_720_1280_25fps.mp4" type="video/mp4">
+            </video>
+            <video class="hero-video" muted playsinline preload="metadata" poster="https://images.pexels.com/videos/9929163/free-video-9929163.jpg?auto=compress&cs=tinysrgb&w=1600">
+                <source src="https://videos.pexels.com/video-files/9929163/9929163-hd_720_1280_30fps.mp4" type="video/mp4">
+            </video>
+            <div class="hero-shade"></div>
+        </div>
 
         <div class="hero-content">
 
@@ -96,33 +114,52 @@
         </div>
 
 
-        <!-- Menu category navigation -->
-        <div class="menu-categories" id="menu-categories">
+        <div class="signature-feature" id="signature-feature" aria-label="Chef recommended dish"></div>
 
-            <!-- Category buttons will be generated using JavaScript -->
-
+        <div class="menu-filter-toolbar">
+            <div class="menu-filter-group">
+                <span class="menu-filter-label">DIETARY</span>
+                <div class="diet-filters" id="diet-filters">
+                    <button class="filter-button active" data-filter="all">All</button>
+                    <button class="filter-button" data-filter="veg">Veg</button>
+                    <button class="filter-button" data-filter="non-veg">Non-Veg</button>
+                </div>
+            </div>
+            <div class="menu-filter-group course-filter-group">
+                <span class="menu-filter-label">COURSE</span>
+                <div class="course-filters" id="course-filters">
+                    <button class="course-filter-button active" data-course-filter="all">All courses</button>
+                    <button class="course-filter-button" data-course-filter="starters">Starters</button>
+                    <button class="course-filter-button" data-course-filter="main">Main course</button>
+                </div>
+            </div>
         </div>
 
-
-        <!-- Veg / Non-Veg filters -->
-        <div class="diet-filters" id="diet-filters">
-
-            <button class="filter-button active" data-filter="all">All</button>
-            <button class="filter-button" data-filter="veg">Veg</button>
-            <button class="filter-button" data-filter="non-veg">Non-Veg</button>
-
-        </div>
-
-
-        <!-- Menu items -->
-        <div class="menu-container" id="menu-container">
-
-            <!-- Food cards will be generated using JavaScript -->
-
+        <div class="menu-layout">
+            <aside class="menu-sidebar">
+                <p class="menu-sidebar-heading">Browse by</p>
+                <div class="menu-categories" id="menu-categories">
+                    <!-- Category buttons are generated using JavaScript -->
+                </div>
+            </aside>
+            <div class="menu-results">
+                <div class="menu-container" id="menu-container">
+                    <!-- Food cards are generated using JavaScript -->
+                </div>
+            </div>
         </div>
 
     </section>
 
+
+    <!-- ================= DISH DETAIL PANE ================= -->
+    <div class="dish-modal" id="dish-modal" aria-hidden="true">
+        <button class="dish-modal-backdrop" type="button" data-close-dish aria-label="Close dish details"></button>
+        <section class="dish-panel" role="dialog" aria-modal="true" aria-labelledby="dish-title">
+            <button class="dish-close" type="button" data-close-dish aria-label="Close dish details">&times;</button>
+            <div id="dish-detail-content"></div>
+        </section>
+    </div>
 
     <!-- ================= CART PANEL ================= -->
     <div class="cart-overlay" id="cart-overlay"></div>
@@ -185,6 +222,7 @@
                 <span class="budget-separator">/</span>
                 <span id="budget-limit">No budget</span>
             </div>
+            <span class="budget-status" id="budget-status" aria-live="polite">Set a budget to track your order.</span>
 
         </div>
 
@@ -212,6 +250,7 @@
                 &times;
             </button>
 
+            <p class="budget-modal-eyebrow">A PERSONAL SPENDING GUIDE</p>
             <h2>Set Your Budget</h2>
 
             <p>How much would you like to spend today?</p>
@@ -344,11 +383,7 @@
 
         <p>Crafted for your cravings. Created for your moments.</p>
 
-        <p class="footer-copyright">
-            &copy; 2026 INDULGENCE. All rights reserved.
-        </p>
-
-    </footer>
+       </footer>
 
 
     <!-- JavaScript -->

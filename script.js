@@ -1,3 +1,15 @@
+/* Deal codes: 
+Golden: Gold25Au
+Silver: Silv20Ag
+Bronze: Bron10Ct
+
+Table Number Codes:
+1. In120
+2. In21
+3. In32
+4. In412
+5. In55 */
+
 const menuItems = [
 
     // SOUPS
@@ -369,7 +381,7 @@ const menuItems = [
         category: "desserts",
         type: "veg",
         price: 160,
-        description: "Soft milk dumplings soaked in fragrant sugar syrup.",
+        description: "Soft milk balls soaked in fragrant sugar syrup.",
         image: "https://images.unsplash.com/photo-1681476747916-8a8fc7e2001e?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=NHwxMjA3fDA%3D"
     },
     {
@@ -386,6 +398,7 @@ const menuItems = [
 /* ===== MENU & CART FOUNDATION ===== */
 
 const categories = [
+    { id: "all", label: "All dishes" },
     { id: "soups", label: "Soups" },
     { id: "beverages", label: "Beverages" },
     { id: "mocktails", label: "Mocktails" },
@@ -397,10 +410,13 @@ const categories = [
 let cart = {};
 let activeCategory = "all";
 let activeDietFilter = "all";
+let activeCourseFilter = "all";
 
 const menuContainer = document.getElementById("menu-container");
+const signatureFeature = document.getElementById("signature-feature");
 const menuCategories = document.getElementById("menu-categories");
 const dietFilters = document.getElementById("diet-filters");
+const courseFilters = document.getElementById("course-filters");
 
 const cartButton = document.getElementById("cart-button");
 const cartPanel = document.getElementById("cart-panel");
@@ -431,6 +447,50 @@ function renderCategories() {
     `).join("");
 }
 
+const menuHighlights = {
+    "Veg Lasagna": "CHEF'S PICK",
+    "Mango Passion": "SIGNATURE SIP",
+    "Brownie with Ice Cream": "SIGNATURE DESSERT"
+};
+
+function getMenuHighlightMarkup(item) {
+    const label = menuHighlights[item.name];
+    return label ? `<span class="menu-highlight">${label}</span>` : "";
+}
+function getMenuCourseBadge(item) {
+    if (item.category.endsWith("-starters")) return "STARTER";
+    if (item.category.endsWith("-main")) return "MAIN COURSE";
+    return ({
+        soups: "SOUP",
+        beverages: "BEVERAGE",
+        mocktails: "MOCKTAIL",
+        desserts: "DESSERT"
+    })[item.category] || "FROM OUR MENU";
+}
+
+function renderSignatureFeature() {
+    const item = menuItems.find(dish => dish.name === "Veg Lasagna");
+    if (!item || !signatureFeature) return;
+
+    signatureFeature.innerHTML = `
+        <img class="signature-feature-image" src="${item.image}" alt="${item.name}" loading="lazy">
+        <div class="signature-feature-copy">
+            <p class="signature-feature-eyebrow"><span aria-hidden="true">✦</span> CHEF'S RECOMMENDATION</p>
+            <div class="signature-feature-title-row">
+                <h3>${item.name}</h3>
+                <button class="dish-info-button signature-info-button" type="button" data-signature-details="${item.id}" aria-label="More about ${item.name}" title="More about ${item.name}">i</button>
+            </div>
+            <p class="signature-feature-description">${item.description} A wonderful way to begin exploring the INDULGENCE menu.</p>
+            <div class="signature-feature-meta">
+                <span class="course-badge">${getMenuCourseBadge(item)}</span>
+                <span class="food-type ${item.type}"><span aria-hidden="true">●</span> ${item.type === "veg" ? "VEG" : "NON-VEG"}</span>
+                <span class="signature-feature-price">${formatPrice(item.price)}</span>
+            </div>
+            <div class="signature-feature-actions">
+                <button type="button" data-signature-add="${item.id}">Add to order <span aria-hidden="true">＋</span></button>
+            </div>
+        </div>`;
+}
 function getFilteredItems() {
     return menuItems.filter(item => {
 
@@ -453,8 +513,12 @@ function getFilteredItems() {
         const dietMatch =
             activeDietFilter === "all" ||
             item.type === activeDietFilter;
+        const courseMatch =
+            activeCourseFilter === "all" ||
+            (activeCourseFilter === "starters" && item.category.endsWith("-starters")) ||
+            (activeCourseFilter === "main" && item.category.endsWith("-main"));
 
-        return categoryMatch && dietMatch;
+        return categoryMatch && dietMatch && courseMatch;
     });
 }
 
@@ -479,11 +543,14 @@ function renderMenu() {
                      loading="lazy">
 
                 <div class="menu-card-content">
-                    <div class="menu-card-top">
+                    <div class="menu-card-title-row">
                         <h3>${item.name}</h3>
-                        <span class="food-type ${item.type}">
-                            ${item.type === "veg" ? "VEG" : "NON-VEG"}
-                        </span>
+                        <button class="dish-info-button" type="button" data-dish-details="${item.id}" aria-label="More about ${item.name}" title="More about ${item.name}">i</button>
+                    </div>
+                    <div class="menu-card-meta">
+                        <span class="course-badge">${getMenuCourseBadge(item)}</span>
+                        <span class="food-type ${item.type}"><span aria-hidden="true">●</span> ${item.type === "veg" ? "VEG" : "NON-VEG"}</span>
+                        ${getMenuHighlightMarkup(item)}
                     </div>
 
                     <p class="menu-card-description">${item.description}</p>
@@ -493,7 +560,7 @@ function renderMenu() {
 
                         <div class="quantity-control">
                             <button data-action="remove" data-id="${item.id}">−</button>
-                            <span>${quantity}</span>
+                            <span data-menu-quantity="${item.id}">${quantity}</span>
                             <button data-action="add" data-id="${item.id}">+</button>
                         </div>
                     </div>
@@ -503,6 +570,15 @@ function renderMenu() {
     }).join("");
 }
 
+signatureFeature.addEventListener("click", event => {
+    const detailButton = event.target.closest("[data-signature-details]");
+    if (detailButton) {
+        openDishDetails(detailButton.dataset.signatureDetails);
+        return;
+    }
+    const addButton = event.target.closest("[data-signature-add]");
+    if (addButton) changeQuantity(addButton.dataset.signatureAdd, 1);
+});
 /* Category switching */
 
 menuCategories.addEventListener("click", event => {
@@ -521,12 +597,20 @@ dietFilters.addEventListener("click", event => {
     if (!button) return;
 
     activeDietFilter = button.dataset.filter;
-
-    document.querySelectorAll(".filter-button").forEach(btn => {
-        btn.classList.remove("active");
+    dietFilters.querySelectorAll(".filter-button").forEach(btn => {
+        btn.classList.toggle("active", btn === button);
     });
+    renderMenu();
+});
 
-    button.classList.add("active");
+courseFilters.addEventListener("click", event => {
+    const button = event.target.closest("[data-course-filter]");
+    if (!button) return;
+
+    activeCourseFilter = button.dataset.courseFilter;
+    courseFilters.querySelectorAll("[data-course-filter]").forEach(btn => {
+        btn.classList.toggle("active", btn === button);
+    });
     renderMenu();
 });
 
@@ -548,11 +632,20 @@ function changeQuantity(id, change) {
         };
     }
 
-    renderMenu();
+    menuContainer.querySelectorAll(`[data-menu-quantity="${id}"]`).forEach(count => {
+        count.textContent = newQuantity > 0 ? newQuantity : 0;
+    });
+
     renderCart();
 }
 
 menuContainer.addEventListener("click", event => {
+    const detailButton = event.target.closest("[data-dish-details]");
+    if (detailButton) {
+        openDishDetails(detailButton.dataset.dishDetails);
+        return;
+    }
+
     const button = event.target.closest("button[data-action]");
     if (!button) return;
 
@@ -560,6 +653,78 @@ menuContainer.addEventListener("click", event => {
         button.dataset.id,
         button.dataset.action === "add" ? 1 : -1
     );
+});
+
+const dishModal = document.getElementById("dish-modal");
+const dishDetailContent = document.getElementById("dish-detail-content");
+let lastDishTrigger = null;
+
+function openDishDetails(id) {
+    const item = menuItems.find(food => food.id === Number(id));
+    if (!item) return;
+
+    lastDishTrigger = document.activeElement;
+    const category = categories.find(entry => entry.id === item.category)?.label ||
+        (item.category.includes("indian") ? "Indian" : "Continental");
+    const style = item.type === "veg" ? "Vegetarian" : "Chef's selection";
+    const courseStory = item.category === "soups"
+        ? "A welcoming first course, designed to warm the palate and ease into the meal."
+        : item.category === "mocktails"
+            ? "A refreshing glass to savour slowly, bringing a bright pause to the table."
+            : item.category === "beverages"
+                ? "A considered companion for your meal, whether you are taking a quiet moment or lingering at the table."
+                : item.category === "desserts"
+                    ? "A graceful final note to the meal, made for a little moment of indulgence."
+                    : item.category.endsWith("-starters")
+                        ? "An inviting opening to the meal, ideal for sharing or enjoying as your first course."
+                        : "A satisfying centrepiece for the table, prepared to be enjoyed at an unhurried pace.";
+
+    dishDetailContent.innerHTML = `
+<div class="dish-panel-copy">
+            <p class="dish-panel-eyebrow">A SIGNATURE FROM OUR KITCHEN</p>
+            <p class="dish-panel-category">${category} <span>·</span> ${style}</p>
+            <h2 id="dish-title">${item.name}</h2>
+            <p class="dish-panel-description">${item.description}</p>
+            <p class="dish-panel-story">${courseStory}</p>
+            <div class="dish-panel-note">
+                <span class="dish-note-mark">✦</span>
+                <p>Prepared to order and finished with the care of our kitchen. Ask our team about today’s seasonal pairing.</p>
+            </div>
+            <div class="dish-panel-footer">
+                <span>${formatPrice(item.price)}</span>
+                <button type="button" class="dish-panel-add" data-panel-add="${item.id}">Add to your order <span aria-hidden="true">＋</span></button>
+            </div>
+        </div>`;
+
+    dishModal.classList.add("is-open");
+    dishModal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open");
+    dishModal.querySelector(".dish-close").focus();
+}
+
+function closeDishDetails() {
+    dishModal.classList.remove("is-open");
+    dishModal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modal-open");
+    lastDishTrigger?.focus();
+}
+
+dishModal.addEventListener("click", event => {
+    if (event.target.closest("[data-close-dish]")) {
+        closeDishDetails();
+        return;
+    }
+    const addButton = event.target.closest("[data-panel-add]");
+    if (addButton) {
+        changeQuantity(addButton.dataset.panelAdd, 1);
+        closeDishDetails();
+    }
+});
+
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && dishModal.classList.contains("is-open")) {
+        closeDishDetails();
+    }
 });
 
 function getCartSubtotal() {
@@ -713,7 +878,7 @@ function dealEligibility(key) {
 
 function renderDeals() {
     dealsContainer.innerHTML = deals.map(d => `
-        <article class="deal-card">
+        <article class="deal-card deal-${d.key} ${appliedDeals[d.key] ? "is-applied" : ""}">
             <span class="deal-badge">${d.tag}</span>
             <span class="deal-frequency">${d.frequency}</span>
             <h3>${d.title}</h3>
@@ -743,6 +908,7 @@ function renderDeals() {
                 aria-live="polite"
                 style="color:${dealMessageColors[d.key]}"
             >${dealMessages[d.key]}</p>
+            <p class="deal-savings" id="deal-savings-${d.key}" aria-live="polite"></p>
         </article>
     `).join("");
 }
@@ -754,6 +920,44 @@ function updateDealTimers() {
     });
 }
 
+function launchDealSprinkles(key) {
+    const card = dealsContainer.querySelector(`.deal-card.deal-${key}`);
+    if (!card) return;
+
+    const colors = {
+        golden: ["#f7d36f", "#e7b84d", "#fff0bd", "#bd8624"],
+        silver: ["#f2f4f5", "#cbd2d6", "#ffffff", "#aab2b7"],
+        bronze: ["#e7a06a", "#d18149", "#f6c092", "#a85e31"]
+    };
+    const palette = colors[key] || colors.golden;
+    const count = 38;
+
+    for (let index = 0; index < count; index += 1) {
+        const side = ["top", "right", "bottom", "left"][index % 4];
+        const sprinkle = document.createElement("span");
+        const across = 4 + Math.random() * 92;
+        const along = 6 + Math.random() * 88;
+        let dx = (Math.random() - .5) * 38;
+        let dy = (Math.random() - .5) * 38;
+
+        if (side === "top") dy = -(22 + Math.random() * 40);
+        if (side === "right") dx = 22 + Math.random() * 40;
+        if (side === "bottom") dy = 22 + Math.random() * 40;
+        if (side === "left") dx = -(22 + Math.random() * 40);
+
+        sprinkle.className = `deal-sprinkle deal-sprinkle-${key}`;
+        sprinkle.style.left = side === "left" ? "0%" : side === "right" ? "100%" : `${across}%`;
+        sprinkle.style.top = side === "top" ? "0%" : side === "bottom" ? "100%" : `${along}%`;
+        sprinkle.style.setProperty("--sprinkle-x", `${dx}px`);
+        sprinkle.style.setProperty("--sprinkle-y", `${dy}px`);
+        sprinkle.style.setProperty("--sprinkle-spin", `${Math.round(Math.random() * 280 - 140)}deg`);
+        sprinkle.style.setProperty("--sprinkle-delay", `${Math.round(Math.random() * 180)}ms`);
+        sprinkle.style.setProperty("--sprinkle-color", palette[Math.floor(Math.random() * palette.length)]);
+        sprinkle.style.setProperty("--sprinkle-size", `${1.5 + Math.random() * 2}px`);
+        card.appendChild(sprinkle);
+        window.setTimeout(() => sprinkle.remove(), 1500);
+    }
+}
 dealsContainer.addEventListener("click", e => {
     const btn = e.target.closest("[data-applydeal]");
     if (!btn) return;
@@ -762,6 +966,7 @@ dealsContainer.addEventListener("click", e => {
     const reason = dealEligibility(key);
     const deal = deals.find(d => d.key === key);
     const entered = document.getElementById(`input-code-${key}`).value.trim();
+    let celebrateAppliedDeal = false;
 
     if (entered !== deal.code) {
         appliedDeals[key] = false;
@@ -776,10 +981,12 @@ dealsContainer.addEventListener("click", e => {
     else {
         appliedDeals[key] = true;
         dealMessages[key] = deal.code + " applied successfully!";
+        celebrateAppliedDeal = true;
         dealMessageColors[key] = "#c9a66b";
     }
 
     renderDeals();
+    if (celebrateAppliedDeal) launchDealSprinkles(key);
     renderCart();
 
     if (finalOrderContainer.innerHTML.trim()) {
@@ -787,51 +994,59 @@ dealsContainer.addEventListener("click", e => {
     }
 });
 
-function getDealDiscount() {
-    let discount = 0;
-    let items = Object.values(cart);
+function getDealSavings(key) {
+    if (!appliedDeals[key] || dealEligibility(key)) return 0;
 
-    // GOLDEN DEAL — 25% off one starter + one main
-    if (appliedDeals.golden && !dealEligibility("golden")) {
-        const starter = items.find(i =>
-            ["indian-starters", "continental-starters"].includes(i.category)
-        );
-
-        const main = items.find(i =>
-            ["indian-main", "continental-main"].includes(i.category)
-        );
-
-        if (starter && main) {
-            discount += (starter.price + main.price) * 0.25;
-        }
+    const items = Object.values(cart);
+    if (key === "golden") {
+        const starter = items.find(item => ["indian-starters", "continental-starters"].includes(item.category));
+        const main = items.find(item => ["indian-main", "continental-main"].includes(item.category));
+        return starter && main ? (starter.price + main.price) * .25 : 0;
     }
 
-    // SILVER DEAL — 20% off two soups
-    if (appliedDeals.silver && !dealEligibility("silver")) {
+    if (key === "silver") {
         let need = 2;
-        let sum = 0;
-
-        for (const soup of items.filter(i => i.category === "soups")) {
-            const n = Math.min(need, soup.quantity);
-            sum += n * soup.price;
-            need -= n;
-
+        let eligibleTotal = 0;
+        for (const soup of items.filter(item => item.category === "soups")) {
+            const quantity = Math.min(need, soup.quantity);
+            eligibleTotal += quantity * soup.price;
+            need -= quantity;
             if (!need) break;
         }
-
-        discount += sum * 0.2;
+        return eligibleTotal * .2;
     }
 
-    // BRONZE DEAL — 10% off beverages and mocktails
-    if (appliedDeals.bronze && !dealEligibility("bronze")) {
-        discount += items
-            .filter(i => ["mocktails", "beverages"].includes(i.category))
-            .reduce((s, i) => s + i.price * i.quantity, 0) * 0.1;
+    if (key === "bronze") {
+        return items
+            .filter(item => ["mocktails", "beverages"].includes(item.category))
+            .reduce((sum, item) => sum + item.price * item.quantity, 0) * .1;
     }
 
+    return 0;
+}
+
+function getDealDiscount() {
+    const discount = deals.reduce((sum, deal) => sum + getDealSavings(deal.key), 0);
     return Math.min(discount, getCartSubtotal());
 }
 
+function updateDealSavingsDisplays() {
+    deals.forEach(deal => {
+        const savingsDisplay = document.getElementById(`deal-savings-${deal.key}`);
+        const card = dealsContainer.querySelector(`.deal-card.deal-${deal.key}`);
+        if (!savingsDisplay || !card) return;
+
+        const isApplied = Boolean(appliedDeals[deal.key]);
+        const savings = getDealSavings(deal.key);
+        card.classList.toggle("is-applied", isApplied);
+        savingsDisplay.classList.toggle("is-visible", isApplied);
+        savingsDisplay.textContent = !isApplied
+            ? ""
+            : savings > 0
+                ? `You save ${formatPrice(savings)} with this deal.`
+                : "Add eligible items to activate this saving.";
+    });
+}
 function getCartTotal() {
     return Math.max(0, getCartSubtotal() - getDealDiscount());
 }
@@ -875,7 +1090,9 @@ function renderCart() {
     cartDiscount.textContent = "−" + formatPrice(dis);
     cartTotal.textContent = formatPrice(tot);
 
+    updateDealSavingsDisplays();
     updateBudgetTracker();
+    renderFinalOrder();
 }
 
 function renderFinalOrder() {
@@ -883,45 +1100,57 @@ function renderFinalOrder() {
 
     if (!items.length) {
         finalOrderContainer.innerHTML = `
-            <div class="empty-cart">
-                <h3>Your order is empty.</h3>
-                <p>Add some menu items first.</p>
+            <div class="order-summary-empty">
+                <span aria-hidden="true">✦</span>
+                <h3>Your order awaits</h3>
+                <p>Add a dish from the menu and your selection will appear here.</p>
             </div>`;
         return;
     }
 
-    const sub = getCartSubtotal();
-    const dis = getDealDiscount();
-    const tot = getCartTotal();
+    const subtotal = getCartSubtotal();
+    const discount = getDealDiscount();
+    const total = getCartTotal();
+    const itemCount = getCartItemCount();
 
     finalOrderContainer.innerHTML = `
-        <div class="final-order-card">
-            <h3>Order Summary</h3>
-
-            ${items.map(i => `
-                <div class="summary-item">
-                    <span>${i.name} × ${i.quantity}</span>
-                    <span>${formatPrice(i.price * i.quantity)}</span>
+        <article class="final-order-card">
+            <header class="order-summary-heading">
+                <div>
+                    <p class="order-summary-eyebrow">YOUR SELECTION</p>
+                    <h3>Order Summary</h3>
                 </div>
-            `).join("")}
+                <span class="order-item-count">${itemCount} ${itemCount === 1 ? "item" : "items"}</span>
+            </header>
 
-            <div class="summary-item subtotal-item">
-                <span>Subtotal</span>
-                <span>${formatPrice(sub)}</span>
+            <div class="summary-items">
+                ${items.map(item => `
+                    <div class="summary-item">
+                        <div class="summary-item-details">
+                            <span class="summary-item-name">${item.name}</span>
+                            <span class="summary-item-quantity">${item.quantity} × ${formatPrice(item.price)}</span>
+                        </div>
+                        <span class="summary-item-price">${formatPrice(item.price * item.quantity)}</span>
+                    </div>
+                `).join("")}
             </div>
 
-            <div class="summary-item discount-row">
-                <span>Discount</span>
-                <span>−${formatPrice(dis)}</span>
-            </div>
-
-            <div class="summary-item total-row">
-                <span>Total Payable</span>
-                <span>${formatPrice(tot)}</span>
-            </div>
-        </div>`;
+            <footer class="summary-totals">
+                <div class="summary-total-row">
+                    <span>Subtotal</span>
+                    <span>${formatPrice(subtotal)}</span>
+                </div>
+                <div class="summary-total-row summary-savings-row">
+                    <span>Deal savings</span>
+                    <span>${discount > 0 ? `−${formatPrice(discount)}` : formatPrice(0)}</span>
+                </div>
+                <div class="summary-grand-total">
+                    <span>Total payable</span>
+                    <span>${formatPrice(total)}</span>
+                </div>
+            </footer>
+        </article>`;
 }
-
 /* ===== BUDGET MODAL ===== */
 
 let budgetAmount = null;
@@ -933,6 +1162,7 @@ const budgetForm = document.getElementById("budget-form");
 const budgetInput = document.getElementById("budget-input");
 const removeBudget = document.getElementById("remove-budget");
 const budgetSpent = document.getElementById("budget-spent");
+const budgetStatus = document.getElementById("budget-status");
 const budgetLimitDisplay = document.getElementById("budget-limit");
 const budgetBar = document.getElementById("budget-progress-bar");
 
@@ -976,18 +1206,36 @@ function updateBudgetTracker() {
     if (!budgetSpent) return;
 
     const spent = getCartTotal();
+    const remaining = budgetAmount === null ? null : budgetAmount - spent;
+    const usage = budgetAmount === null ? 0 : spent / budgetAmount * 100;
+    const reached = budgetAmount !== null && usage >= 100;
+    const almost = budgetAmount !== null && usage >= 85 && !reached;
 
     budgetSpent.textContent = formatPrice(spent);
-
     budgetLimitDisplay.textContent =
         budgetAmount === null ? "No budget" : formatPrice(budgetAmount);
 
-    if (budgetBar) {
-        budgetBar.style.width =
-            budgetAmount === null ? "0%" : `${Math.min(100, spent / budgetAmount * 100)}%`;
+    if (budgetStatus) {
+        budgetStatus.textContent = budgetAmount === null
+            ? "Set a budget to see how much is left."
+            : reached
+                ? remaining < 0
+                    ? `₹0 left · ${formatPrice(Math.abs(remaining))} over budget.`
+                    : "Budget reached · ₹0 left to spend."
+                : almost
+                    ? `Almost at your budget · ${formatPrice(remaining)} left.`
+                    : `${formatPrice(remaining)} left to spend.`;
+        budgetStatus.classList.toggle("is-warning", almost);
+        budgetStatus.classList.toggle("is-reached", reached);
+    }
 
-        budgetBar.style.backgroundColor =
-            budgetAmount !== null && spent > budgetAmount ? "#b94a4a" : "";
+    const tracker = document.getElementById("budget-tracker");
+    tracker?.classList.toggle("at-limit", reached);
+    tracker?.classList.toggle("near-limit", almost);
+
+    if (budgetBar) {
+        budgetBar.style.width = `${Math.min(100, usage)}%`;
+        budgetBar.style.backgroundColor = reached ? "#b7503e" : almost ? "#d8a847" : "";
     }
 }
 
@@ -1046,42 +1294,37 @@ orderForm.addEventListener("submit", e => {
     const time = new Date().toLocaleString("en-IN");
 
     successArea.innerHTML = `
-        <div style="max-width:760px;margin:32px auto;padding:30px;background:#211512;color:#f5eee3;border:1px solid #c9a66b;border-radius:14px;text-align:center">
-            <p style="color:#c9a66b;letter-spacing:2px">ORDER CONFIRMED</p>
-            <h2>Thank you, ${escapeText(customer)}!</h2>
-            <p>Your order is confirmed.</p>
-            <h3>Order ID: ${orderId}</h3>
-            <p>Table ${table} · ${time}</p>
-            <hr>
+        <article class="confirmation-card">
+            <div class="confirmation-ornament" aria-hidden="true"><span>✦</span></div>
+            <p class="confirmation-eyebrow">A MOMENT TO SAVOR</p>
+            <h2>Order Confirmed</h2>
+            <p class="confirmation-thanks">Thank you, <span>${escapeText(customer)}</span>.</p>
+            <p class="confirmation-message">Your selection is being prepared with care. We look forward to serving you.</p>
 
-            ${Object.values(cart).map(i => `
-                <p style="display:flex;justify-content:space-between;gap:12px">
-                    <span>${escapeText(i.name)} × ${i.quantity}</span>
-                    <span>${formatPrice(i.price * i.quantity)}</span>
-                </p>
-            `).join("")}
+            <div class="confirmation-meta">
+                <div><span>ORDER NUMBER</span><strong>${orderId}</strong></div>
+                <div><span>YOUR TABLE</span><strong>${table}</strong></div>
+                <div><span>CONFIRMED</span><strong>${escapeText(time)}</strong></div>
+            </div>
 
-            <p style="display:flex;justify-content:space-between">
-                <span>Subtotal</span>
-                <span>${formatPrice(subtotal)}</span>
-            </p>
+            <div class="confirmation-divider"><span>YOUR ORDER</span></div>
+            <div class="confirmation-items">
+                ${Object.values(cart).map(i => `
+                    <div class="confirmation-item">
+                        <div><strong>${escapeText(i.name)}</strong><span>Quantity ${i.quantity}</span></div>
+                        <strong>${formatPrice(i.price * i.quantity)}</strong>
+                    </div>
+                `).join("")}
+            </div>
 
-            <p style="display:flex;justify-content:space-between">
-                <span>Discount</span>
-                <span>−${formatPrice(discount)}</span>
-            </p>
+            <div class="confirmation-totals">
+                <div><span>Subtotal</span><span>${formatPrice(subtotal)}</span></div>
+                <div class="confirmation-discount"><span>Deal savings</span><span>−${formatPrice(discount)}</span></div>
+                <div class="confirmation-total"><span>Total paid</span><strong>${formatPrice(total)}</strong></div>
+            </div>
 
-            <h2 style="display:flex;justify-content:space-between;color:#c9a66b">
-                <span>Total</span>
-                <span>${formatPrice(total)}</span>
-            </h2>
-
-            
-
-            <button id="new-order" type="button" style="padding:12px 20px;background:#c9a66b;border:0;border-radius:8px;cursor:pointer">
-                Start New Order
-            </button>
-        </div>`;
+            <button id="new-order" class="confirmation-new-order" type="button">Start a New Order <span aria-hidden="true">↗</span></button>
+        </article>`;
 
     successArea.style.display = "block";
     successArea.scrollIntoView({ behavior: "smooth" });
@@ -1103,12 +1346,154 @@ orderForm.addEventListener("submit", e => {
     });
 });
 
+function updateActiveNavSection() {
+    const navSections = ["home", "deals", "menu", "checkout"]
+        .map(id => document.getElementById(id))
+        .filter(Boolean);
+    const navLinks = [...document.querySelectorAll('.nav-links a[href^="#"]')];
+    const marker = window.innerHeight * .34;
+    let current = navSections.find(section => {
+        const bounds = section.getBoundingClientRect();
+        return bounds.top <= marker && bounds.bottom > marker;
+    });
+
+    if (!current && navSections.length) {
+        current = navSections.reduce((nearest, section) => {
+            const distance = Math.abs(section.getBoundingClientRect().top - marker);
+            const nearestDistance = Math.abs(nearest.getBoundingClientRect().top - marker);
+            return distance < nearestDistance ? section : nearest;
+        });
+    }
+
+    navLinks.forEach(link => {
+        const isCurrent = current && link.hash === `#${current.id}`;
+        link.classList.toggle("active", Boolean(isCurrent));
+        if (isCurrent) link.setAttribute("aria-current", "page");
+        else link.removeAttribute("aria-current");
+    });
+}
+
+window.addEventListener("scroll", updateActiveNavSection, { passive: true });
+window.addEventListener("resize", updateActiveNavSection, { passive: true });
 /* ===== INITIAL RENDER ===== */
 
 renderCategories();
 renderMenu();
+renderSignatureFeature();
 renderCart();
+updateActiveNavSection();
 renderDeals();
+updateDealSavingsDisplays();
 updateBudgetTracker();
 
 setInterval(updateDealTimers, 1000);
+
+/* Four short stock-food scenes crossfade in a cinematic loop. */
+const heroScenes = [...document.querySelectorAll(".hero-video")];
+let heroSceneIndex = 0;
+
+function playHeroScene(index) {
+    if (!heroScenes.length) return;
+    heroScenes.forEach((scene, sceneIndex) => {
+        scene.classList.toggle("is-active", sceneIndex === index);
+        if (sceneIndex !== index) scene.pause();
+    });
+    const scene = heroScenes[index];
+    scene.currentTime = 0;
+    const playback = scene.play();
+    if (playback) playback.catch(() => {});
+    window.setTimeout(() => {
+        heroSceneIndex = (index + 1) % heroScenes.length;
+        playHeroScene(heroSceneIndex);
+    }, 3000);
+}
+
+if (heroScenes.length && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    playHeroScene(0);
+}
+/* Floating, clustered gold dust behind the page content. */
+(() => {
+    const canvas = document.getElementById("stardust-canvas");
+    const context = canvas?.getContext("2d", { alpha: true });
+    if (!canvas || !context) return;
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const palette = ["194, 127, 17", "205, 145, 28", "226, 171, 54", "156, 99, 13", "235, 190, 78"];
+    let width = 0;
+    let height = 0;
+    let particles = [];
+
+
+    function makeParticle() {
+        const hotspot = Math.random() < 0.62;
+        const centerX = Math.random() < 0.5 ? width * .34 : width * .78;
+        const centerY = Math.random() < 0.5 ? height * .7 : height * .33;
+        const spreadX = hotspot ? width * .2 : width * .58;
+        const spreadY = hotspot ? height * .18 : height * .58;
+        const normal = () => (Math.random() + Math.random() + Math.random() - 1.5) * .72;
+        return {
+            x: hotspot ? centerX + normal() * spreadX : Math.random() * width,
+            y: hotspot ? centerY + normal() * spreadY : Math.random() * height,
+            radius: Math.random() < .9 ? .25 + Math.random() * .85 : 1 + Math.random() * .8,
+            alpha: .18 + Math.random() * .7,
+            phase: Math.random() * Math.PI * 2,
+            speed: .12 + Math.random() * .5,
+            drift: (Math.random() - .5) * .26,
+            color: palette[Math.floor(Math.random() * palette.length)]
+        };
+    }
+
+    function resize() {
+        const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        const count = Math.max(1400, Math.min(8500, Math.round(width * height / 280)));
+        particles = Array.from({ length: count }, makeParticle);
+        draw(0);
+    }
+
+    function draw(time) {
+        context.clearRect(0, 0, width, height);
+        const seconds = time / 1000;
+
+        const glow = (x, y, radius, strength) => {
+            const gradient = context.createRadialGradient(x, y, 0, x, y, radius);
+            gradient.addColorStop(0, `rgba(155, 94, 8, ${strength})`);
+            gradient.addColorStop(.44, `rgba(105, 64, 7, ${strength * .42})`);
+            gradient.addColorStop(1, "rgba(48, 30, 4, 0)");
+            context.fillStyle = gradient;
+            context.fillRect(0, 0, width, height);
+        };
+        glow(width * .28, height * .75, Math.max(width, height) * .44, .2);
+        glow(width * .8, height * .36, Math.max(width, height) * .38, .13);
+
+        for (const particle of particles) {
+            if (!reduceMotion) {
+                particle.x += particle.drift + Math.sin(seconds * .35 + particle.phase) * .12;
+                particle.y -= particle.speed;
+                if (particle.y < -3) { particle.y = height + 3; particle.x = Math.random() * width; }
+                if (particle.x < -3) particle.x = width + 3;
+                if (particle.x > width + 3) particle.x = -3;
+            }
+            const twinkle = .72 + Math.sin(seconds * 1.5 + particle.phase) * .28;
+            context.beginPath();
+            context.fillStyle = `rgba(${particle.color}, ${particle.alpha * twinkle})`;
+            context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+            context.fill();
+            if (particle.radius > 1.35) {
+                context.beginPath();
+                context.fillStyle = `rgba(240, 190, 81, ${particle.alpha * .12 * twinkle})`;
+                context.arc(particle.x, particle.y, particle.radius * 3.2, 0, Math.PI * 2);
+                context.fill();
+            }
+        }
+
+        if (!reduceMotion) window.requestAnimationFrame(draw);
+    }
+
+    window.addEventListener("resize", resize, { passive: true });
+    resize();
+})();
