@@ -1,7 +1,7 @@
 
-/* =========================================
-   INDULGENCE — DESIGN SYSTEM
-========================================= */
+
+ /* INDULGENCE — DESIGN SYSTEM */
+ 
 
 :root {
     --bg: #160e0c;
@@ -1774,6 +1774,17 @@ img {
 .deal-card.is-applied:hover {
     box-shadow: 0 0 0 1px var(--deal-applied-border), 0 0 38px var(--deal-applied-glow), 0 32px 65px rgba(0,0,0,.38), inset 0 1px rgba(255,255,255,.3);
 }
+.deal-sprinkle {
+    opacity: 1;
+    filter: saturate(1.4) brightness(.82);
+    box-shadow: 0 0 5px 1px var(--sprinkle-color), 0 0 13px 3px var(--sprinkle-color), 0 0 24px 5px color-mix(in srgb, var(--sprinkle-color) 70%, transparent);
+    animation-duration: 1.8s;
+}
+@keyframes dealSprinkleDrift {
+    0% { opacity: 0; transform: translate3d(0,0,0) rotate(0deg) scale(.45); }
+    12% { opacity: 1; transform: translate3d(0,0,0) rotate(12deg) scale(1.25); }
+    100% { opacity: 0; transform: translate3d(var(--sprinkle-x),var(--sprinkle-y),0) rotate(var(--sprinkle-spin)) scale(.35); }
+}
 .deal-savings { display: none; }
 .deal-savings.is-visible {
     display: inline-flex;
@@ -1831,4 +1842,16 @@ img {
     .order-summary-heading { padding-bottom: 17px; }
     .summary-item { gap: 10px; }
     .summary-item-name { font-size: 1rem; }
+}
+
+/* Keep the number control in the same dark, warm palette as the budget modal. */
+.budget-modal input[type="number"] { color-scheme: dark; }
+.budget-modal input[type="number"]::-webkit-inner-spin-button,
+.budget-modal input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+    filter: sepia(.8) saturate(2.2) hue-rotate(2deg) brightness(1.08);
+}
+.budget-modal input[type="number"] { accent-color: #d8b56f; }
+@media (prefers-reduced-motion: reduce) {
+    .deal-sprinkle { animation-duration: .01ms; animation-delay: 0ms; }
 }

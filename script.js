@@ -478,7 +478,6 @@ function renderSignatureFeature() {
             <p class="signature-feature-eyebrow"><span aria-hidden="true">✦</span> CHEF'S RECOMMENDATION</p>
             <div class="signature-feature-title-row">
                 <h3>${item.name}</h3>
-                <button class="dish-info-button signature-info-button" type="button" data-signature-details="${item.id}" aria-label="More about ${item.name}" title="More about ${item.name}">i</button>
             </div>
             <p class="signature-feature-description">${item.description} A wonderful way to begin exploring the INDULGENCE menu.</p>
             <div class="signature-feature-meta">
@@ -545,7 +544,6 @@ function renderMenu() {
                 <div class="menu-card-content">
                     <div class="menu-card-title-row">
                         <h3>${item.name}</h3>
-                        <button class="dish-info-button" type="button" data-dish-details="${item.id}" aria-label="More about ${item.name}" title="More about ${item.name}">i</button>
                     </div>
                     <div class="menu-card-meta">
                         <span class="course-badge">${getMenuCourseBadge(item)}</span>
@@ -571,11 +569,6 @@ function renderMenu() {
 }
 
 signatureFeature.addEventListener("click", event => {
-    const detailButton = event.target.closest("[data-signature-details]");
-    if (detailButton) {
-        openDishDetails(detailButton.dataset.signatureDetails);
-        return;
-    }
     const addButton = event.target.closest("[data-signature-add]");
     if (addButton) changeQuantity(addButton.dataset.signatureAdd, 1);
 });
@@ -586,7 +579,9 @@ menuCategories.addEventListener("click", event => {
     if (!button) return;
 
     activeCategory = button.dataset.category;
-    renderCategories();
+    menuCategories.querySelectorAll(".category-button").forEach(categoryButton => {
+        categoryButton.classList.toggle("active", categoryButton.dataset.category === activeCategory);
+    });
     renderMenu();
 });
 
@@ -640,12 +635,6 @@ function changeQuantity(id, change) {
 }
 
 menuContainer.addEventListener("click", event => {
-    const detailButton = event.target.closest("[data-dish-details]");
-    if (detailButton) {
-        openDishDetails(detailButton.dataset.dishDetails);
-        return;
-    }
-
     const button = event.target.closest("button[data-action]");
     if (!button) return;
 
@@ -653,78 +642,6 @@ menuContainer.addEventListener("click", event => {
         button.dataset.id,
         button.dataset.action === "add" ? 1 : -1
     );
-});
-
-const dishModal = document.getElementById("dish-modal");
-const dishDetailContent = document.getElementById("dish-detail-content");
-let lastDishTrigger = null;
-
-function openDishDetails(id) {
-    const item = menuItems.find(food => food.id === Number(id));
-    if (!item) return;
-
-    lastDishTrigger = document.activeElement;
-    const category = categories.find(entry => entry.id === item.category)?.label ||
-        (item.category.includes("indian") ? "Indian" : "Continental");
-    const style = item.type === "veg" ? "Vegetarian" : "Chef's selection";
-    const courseStory = item.category === "soups"
-        ? "A welcoming first course, designed to warm the palate and ease into the meal."
-        : item.category === "mocktails"
-            ? "A refreshing glass to savour slowly, bringing a bright pause to the table."
-            : item.category === "beverages"
-                ? "A considered companion for your meal, whether you are taking a quiet moment or lingering at the table."
-                : item.category === "desserts"
-                    ? "A graceful final note to the meal, made for a little moment of indulgence."
-                    : item.category.endsWith("-starters")
-                        ? "An inviting opening to the meal, ideal for sharing or enjoying as your first course."
-                        : "A satisfying centrepiece for the table, prepared to be enjoyed at an unhurried pace.";
-
-    dishDetailContent.innerHTML = `
-<div class="dish-panel-copy">
-            <p class="dish-panel-eyebrow">A SIGNATURE FROM OUR KITCHEN</p>
-            <p class="dish-panel-category">${category} <span>·</span> ${style}</p>
-            <h2 id="dish-title">${item.name}</h2>
-            <p class="dish-panel-description">${item.description}</p>
-            <p class="dish-panel-story">${courseStory}</p>
-            <div class="dish-panel-note">
-                <span class="dish-note-mark">✦</span>
-                <p>Prepared to order and finished with the care of our kitchen. Ask our team about today’s seasonal pairing.</p>
-            </div>
-            <div class="dish-panel-footer">
-                <span>${formatPrice(item.price)}</span>
-                <button type="button" class="dish-panel-add" data-panel-add="${item.id}">Add to your order <span aria-hidden="true">＋</span></button>
-            </div>
-        </div>`;
-
-    dishModal.classList.add("is-open");
-    dishModal.setAttribute("aria-hidden", "false");
-    document.body.classList.add("modal-open");
-    dishModal.querySelector(".dish-close").focus();
-}
-
-function closeDishDetails() {
-    dishModal.classList.remove("is-open");
-    dishModal.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("modal-open");
-    lastDishTrigger?.focus();
-}
-
-dishModal.addEventListener("click", event => {
-    if (event.target.closest("[data-close-dish]")) {
-        closeDishDetails();
-        return;
-    }
-    const addButton = event.target.closest("[data-panel-add]");
-    if (addButton) {
-        changeQuantity(addButton.dataset.panelAdd, 1);
-        closeDishDetails();
-    }
-});
-
-document.addEventListener("keydown", event => {
-    if (event.key === "Escape" && dishModal.classList.contains("is-open")) {
-        closeDishDetails();
-    }
 });
 
 function getCartSubtotal() {
@@ -925,9 +842,9 @@ function launchDealSprinkles(key) {
     if (!card) return;
 
     const colors = {
-        golden: ["#f7d36f", "#e7b84d", "#fff0bd", "#bd8624"],
-        silver: ["#f2f4f5", "#cbd2d6", "#ffffff", "#aab2b7"],
-        bronze: ["#e7a06a", "#d18149", "#f6c092", "#a85e31"]
+        golden: ["#b87508", "#d89a1f", "#f0c75b", "#9b5b00"],
+        silver: ["#8e9ba3", "#c3cdd2", "#e4edf1", "#71808a"],
+        bronze: ["#a4511b", "#c66a2c", "#e29451", "#803a12"]
     };
     const palette = colors[key] || colors.golden;
     const count = 38;
@@ -953,9 +870,9 @@ function launchDealSprinkles(key) {
         sprinkle.style.setProperty("--sprinkle-spin", `${Math.round(Math.random() * 280 - 140)}deg`);
         sprinkle.style.setProperty("--sprinkle-delay", `${Math.round(Math.random() * 180)}ms`);
         sprinkle.style.setProperty("--sprinkle-color", palette[Math.floor(Math.random() * palette.length)]);
-        sprinkle.style.setProperty("--sprinkle-size", `${1.5 + Math.random() * 2}px`);
+        sprinkle.style.setProperty("--sprinkle-size", `${2.5 + Math.random() * 2.5}px`);
         card.appendChild(sprinkle);
-        window.setTimeout(() => sprinkle.remove(), 1500);
+        window.setTimeout(() => sprinkle.remove(), 2300);
     }
 }
 dealsContainer.addEventListener("click", e => {
